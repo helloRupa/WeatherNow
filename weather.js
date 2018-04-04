@@ -1,6 +1,4 @@
 (function() {
-    getLocation();
-
     function getLocation() {
         if (navigator.geolocation) {
           navigator.geolocation.getCurrentPosition(function(position) {
@@ -126,5 +124,7 @@
             bodyStyle.backgroundColor = "#ED7217";
         else bodyStyle.backgroundColor = "#D83420";
     }
+
+    getLocation();
   })();
   
