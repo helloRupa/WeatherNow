@@ -3,17 +3,19 @@
 
     function getLocation() {
         if (navigator.geolocation) {
-          navigator.geolocation.getCurrentPosition(showPosition, showError);
+          navigator.geolocation.getCurrentPosition(function(position) {
+            getData(posToURL(position), populateData, showError, {code: "SCRIPT_FAILURE"});
+          }, showError);
         } else {
           document.getElementById("notSupported").style.visibility = "visible";
         }
       }
   
-    function showPosition(position) {
-      let lat = position.coords.latitude;
-      let longitude = position.coords.longitude;
-      let url = `https://fcc-weather-api.glitch.me/api/current?lat=${lat}&lon=${longitude}`;
-      getData(url, populateData, showError, {code: "SCRIPT_FAILURE"});
+    function posToURL(position) {
+      //round #s to prevent API glitch where it provides wrong location
+      let lat = parseFloat(position.coords.latitude.toFixed(2));
+      let longitude = parseFloat(position.coords.longitude.toFixed(2));
+      return url = `https://fcc-weather-api.glitch.me/api/current?lat=${lat}&lon=${longitude}`;
     }
   
     function showError(error) {
