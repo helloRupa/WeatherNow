@@ -2,13 +2,14 @@
     function getLocation() {
         if (navigator.geolocation) {
           navigator.geolocation.getCurrentPosition(function(position) {
+            console.log(position);
             let loadScreen = document.getElementById("loading").style;
             let container = document.getElementById("container").style;
             getData(posToURL(position), populateData, showError, {code: "SCRIPT_FAILURE"});
             loadScreen.opacity = "0";
             container.opacity = "1";
             setTimeout(() => loadScreen.display = "none", 1100);
-          }, showError);
+          }, showError, {maximumAge: 10000, timeout: 5000, enableHighAccuracy: true});
         } else {
           document.getElementById("notSupported").style.visibility = "visible";
         }
@@ -131,5 +132,6 @@
     }
 
     getLocation();
+    
   })();
   
