@@ -1,67 +1,79 @@
-(function() {
-    function getLocation() {
-        if (navigator.geolocation) {
-          navigator.geolocation.getCurrentPosition(function(position) {
-            console.log(position);
-            let loadScreen = document.getElementById("loading").style;
-            let container = document.getElementById("container").style;
-            getData(posToURL(position), populateData, showError, {code: "SCRIPT_FAILURE"});
-            loadScreen.opacity = "0";
-            container.opacity = "1";
-            setTimeout(() => loadScreen.display = "none", 1100);
-          }, showError, {maximumAge: 10000, timeout: 5000, enableHighAccuracy: true});
-        } else {
-          document.getElementById("notSupported").style.visibility = "visible";
-        }
+(function () {
+  function getLocation() {
+    if (navigator.geolocation) {
+      var geo = navigator.geolocation.watchPosition(function (position) {
+        getData(posToURL(position), populateData, showError, {
+          code: "SCRIPT_FAILURE"
+        });
+        clearLoadScreen();
+        navigator.geolocation.clearWatch(geo);
+      }, showError, {
+        maximumAge: 60000,
+        timeout: 10000,
+        enableHighAccuracy: false
+      });
+    } else {
+      document.getElementById("notSupported").style.visibility = "visible";
+      clearLoadScreen();
+    }
+  }
+
+  function clearLoadScreen() {
+    let loadScreen = document.getElementById("loading").style;
+    let container = document.getElementById("container").style;
+    loadScreen.opacity = "0";
+    container.opacity = "1";
+    setTimeout(() => loadScreen.display = "none", 1100);
+  }
+
+  function posToURL(position) {
+    let lat = parseFloat(position.coords.latitude.toFixed(2));
+    let longitude = parseFloat(position.coords.longitude.toFixed(2));
+    return `https://fcc-weather-api.glitch.me/api/current?lat=${lat}&lon=${longitude}`;
+  }
+
+  function showError(error) {
+    let errorDiv = document.getElementById("notSupported");
+    let errorP = errorDiv.getElementsByTagName("p")[0];
+    console.log(error);
+    switch (error.code) {
+      case error.PERMISSION_DENIED:
+        errorP.innerHTML = "Without your location, we cannot provide you with the weather.";
+        break;
+      case error.TIMEOUT:
+        errorP.innerHTML = "The request to get user location timed out.";
+        break;
+      case error.UNKNOWN_ERROR:
+        errorP.innerHTML = "An unknown error occurred. We are sorry.";
+        break;
+      default:
+        errorP.innerHTML = "Location information is unavailable at this time.";
+    }
+    errorDiv.style.visibility = "visible";
+    clearLoadScreen();
+  }
+
+  function getData(url, callback, errorCallback, errorArgs) {
+    let xmlhttp = new XMLHttpRequest();
+    xmlhttp.onreadystatechange = function () {
+      if (this.readyState == 4 && this.status == 200) {
+        let myObj = JSON.parse(this.responseText);
+        if (typeof callback === "function") callback(myObj);
       }
-  
-    function posToURL(position) {
-      //round #s to prevent API glitch where it provides wrong location
-      let lat = parseFloat(position.coords.latitude.toFixed(2));
-      let longitude = parseFloat(position.coords.longitude.toFixed(2));
-      return `https://fcc-weather-api.glitch.me/api/current?lat=${lat}&lon=${longitude}`;
-    }
-  
-    function showError(error) {
-      let errorDiv = document.getElementById("notSupported");
-      let errorP = errorDiv.getElementsByTagName("p")[0];
-      switch (error.code) {
-        case error.PERMISSION_DENIED:
-          errorP.innerHTML = "Without your location, we cannot provide you with the weather.";
-          break;
-        case error.TIMEOUT:
-          errorP.innerHTML = "The request to get user location timed out.";
-          break;
-        case error.UNKNOWN_ERROR:
-          errorP.innerHTML = "An unknown error occurred. We are sorry.";
-          break;
-        default:
-          errorP.innerHTML = "Location information is unavailable at this time.";
-      }
-      errorDiv.style.visibility = "visible";
-    }
-  
-    function getData(url, callback, errorCallback, errorArgs) {
-        let xmlhttp = new XMLHttpRequest();
-        xmlhttp.onreadystatechange = function() {
-          if (this.readyState == 4 && this.status == 200) {
-            let myObj = JSON.parse(this.responseText);
-            if (typeof callback === "function") callback(myObj);
-          }
-       };
-        xmlhttp.open("GET", url, true);
-        xmlhttp.onerror = function () {
-          if (typeof errorCallback === "function") errorCallback(errorArgs);
-        };
-        xmlhttp.send();
-    }
+    };
+    xmlhttp.open("GET", url, true);
+    xmlhttp.onerror = function () {
+      if (typeof errorCallback === "function") errorCallback(errorArgs);
+    };
+    xmlhttp.send();
+  }
 
   function populateData(myObj) {
     let tempNum = myObj.main.temp;
     let city = myObj.name;
     let country = myObj.sys.country;
-    let desc = myObj.weather[0].description.replace(/\w\S*/g, function(txt) {
-        return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();
+    let desc = myObj.weather[0].description.replace(/\w\S*/g, function (txt) {
+      return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();
     });
     let imgSrc = myObj.weather[0].icon;
     setBg(tempNum);
@@ -79,59 +91,60 @@
     numSpan.textContent = temperature;
     tLink.href = "#~";
     tLink.textContent = "C";
-    tLink.onclick = function() { convertT(temperature);};
+    tLink.onclick = function () {
+      convertT(temperature);
+    };
     temp.appendChild(numSpan);
     temp.appendChild(degText);
     temp.appendChild(tLink);
   }
 
-    function convertT(temperature) {
-      let tempDiv = document.getElementById("temperature");
-      let tempNum = tempDiv.getElementsByTagName("span")[0];
-      let tempUnit = tempDiv.getElementsByTagName("a")[0];
-      let tF = Math.floor(temperature * (9 / 5) + 32);
-  
-      if (tempUnit.textContent == "C") {
-        tempUnit.textContent = "F";
-        tempNum.textContent = tF;
-      } else {
-        tempUnit.textContent = "C";
-        tempNum.textContent = temperature;
-      }
-    }
+  function convertT(temperature) {
+    let tempDiv = document.getElementById("temperature");
+    let tempNum = tempDiv.getElementsByTagName("span")[0];
+    let tempUnit = tempDiv.getElementsByTagName("a")[0];
+    let tF = Math.floor(temperature * (9 / 5) + 32);
 
-    function setLoc(city, country) {
-        let location = document.getElementById("location");
-        location.textContent = city + ", " + country;
+    if (tempUnit.textContent == "C") {
+      tempUnit.textContent = "F";
+      tempNum.textContent = tF;
+    } else {
+      tempUnit.textContent = "C";
+      tempNum.textContent = temperature;
     }
+  }
 
-    function setDesc(desc) {
-        let description = document.getElementById("description");
-        description.textContent = desc;
-    }
+  function setLoc(city, country) {
+    let location = document.getElementById("location");
+    location.textContent = city + ", " + country;
+  }
 
-    function setIcon(imgSrc) {
-        let wIcon = document.getElementById("wIcon");
-        let imgIcon = document.createElement("img");
-        imgIcon.src = imgSrc;
-        imgIcon.alt = "Today's weather icon";
-        wIcon.appendChild(imgIcon);
-    }
+  function setDesc(desc) {
+    let description = document.getElementById("description");
+    description.textContent = desc;
+  }
 
-    function setBg(tempNum) {
-        let bodyStyle = document.body.style;
-        if (tempNum <= 0) 
-            bodyStyle.backgroundColor = "#1E28EE";
-        else if (tempNum > 0 && tempNum < 10)
-            bodyStyle.backgroundColor = "#A5EDED";
-        else if (tempNum >= 10 && tempNum < 25)
-            bodyStyle.backgroundColor = "#F9DC2D";
-        else if (tempNum >= 25 && tempNum < 32)
-            bodyStyle.backgroundColor = "#ED7217";
-        else bodyStyle.backgroundColor = "#D83420";
-    }
+  function setIcon(imgSrc) {
+    let wIcon = document.getElementById("wIcon");
+    let imgIcon = document.createElement("img");
+    imgIcon.src = imgSrc;
+    imgIcon.alt = "Today's weather icon";
+    wIcon.appendChild(imgIcon);
+  }
 
-    getLocation();
-    
-  })();
-  
+  function setBg(tempNum) {
+    let bodyStyle = document.body.style;
+    if (tempNum <= 0)
+      bodyStyle.backgroundColor = "#1E28EE";
+    else if (tempNum > 0 && tempNum < 10)
+      bodyStyle.backgroundColor = "#A5EDED";
+    else if (tempNum >= 10 && tempNum < 25)
+      bodyStyle.backgroundColor = "#F9DC2D";
+    else if (tempNum >= 25 && tempNum < 32)
+      bodyStyle.backgroundColor = "#ED7217";
+    else bodyStyle.backgroundColor = "#D83420";
+  }
+
+  getLocation();
+
+})();
