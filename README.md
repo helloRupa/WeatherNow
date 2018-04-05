@@ -1,5 +1,4 @@
 # Today's Weather
-
 Get the current temperature and a basic description of the weather in your local area. Uses geolocation services to provide weather.
 
 ## Features:
@@ -11,4 +10,4 @@ Get the current temperature and a basic description of the weather in your local
 
 *Created as part of Free Code Camp curriculum.*
 
-Demo at https://codepen.io/rdhi/full/eVzjbG/
+Demo at https://codepen.io/rdhi/full/wmEPOR/ (uses old JS - var, no arrow funcs - for compatibility with old mobile phones)
