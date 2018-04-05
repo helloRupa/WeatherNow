@@ -2,7 +2,12 @@
     function getLocation() {
         if (navigator.geolocation) {
           navigator.geolocation.getCurrentPosition(function(position) {
+            let loadScreen = document.getElementById("loading").style;
+            let container = document.getElementById("container").style;
             getData(posToURL(position), populateData, showError, {code: "SCRIPT_FAILURE"});
+            loadScreen.opacity = "0";
+            container.opacity = "1";
+            setTimeout(() => loadScreen.display = "none", 1100);
           }, showError);
         } else {
           document.getElementById("notSupported").style.visibility = "visible";
@@ -13,7 +18,7 @@
       //round #s to prevent API glitch where it provides wrong location
       let lat = parseFloat(position.coords.latitude.toFixed(2));
       let longitude = parseFloat(position.coords.longitude.toFixed(2));
-      return url = `https://fcc-weather-api.glitch.me/api/current?lat=${lat}&lon=${longitude}`;
+      return `https://fcc-weather-api.glitch.me/api/current?lat=${lat}&lon=${longitude}`;
     }
   
     function showError(error) {
