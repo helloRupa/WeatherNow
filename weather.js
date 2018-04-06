@@ -1,11 +1,10 @@
 (function () {
   function getLocation() {
     if (navigator.geolocation) {
-      let geo = navigator.geolocation.watchPosition(function (position) {
+      navigator.geolocation.getCurrentPosition(function (position) {
         getData(posToURL(position), populateData, showError, {
           code: "SCRIPT_FAILURE"
         }, validateData, position);
-        navigator.geolocation.clearWatch(geo);
       }, showError, {
         maximumAge: 60000,
         timeout: 20000,
@@ -51,8 +50,8 @@
     errorDiv.style.visibility = "visible";
     clearLoadScreen();
   }
-  //check if API returned a valid response
-  function validateData (position, response) {
+  //check if API returned a valid response (correct location's data)
+  function validateData(position, response) {
     let geoLat = parseInt(position.coords.latitude, 10);
     let geoLon = parseInt(position.coords.longitude, 10);
     let resLat = parseInt(response.coord.lat, 10);
@@ -69,13 +68,12 @@
       if (this.readyState == 4 && this.status == 200) {
         let myObj = JSON.parse(this.responseText);
         let isValid = true;
-        if (typeof validationCallback === "function") 
+        if (typeof validationCallback === "function")
           isValid = validationCallback(validationArgs, myObj);
         if (isValid) {
           if (typeof callback === "function")
             callback(myObj);
-        }
-        else
+        } else
           setTimeout(() => getData(url, callback, errorCallback, errorArgs, validationCallback, validationArgs), 100);
       }
     };
@@ -144,11 +142,13 @@
   }
 
   function setIcon(imgSrc) {
-    let wIcon = document.getElementById("wIcon");
-    let imgIcon = document.createElement("img");
-    imgIcon.src = imgSrc;
-    imgIcon.alt = "Today's weather icon";
-    wIcon.appendChild(imgIcon);
+    if (imgSrc) {
+      let wIcon = document.getElementById("wIcon");
+      let imgIcon = document.createElement("img");
+      imgIcon.src = imgSrc;
+      imgIcon.alt = "Today's weather icon";
+      wIcon.appendChild(imgIcon);
+    }
   }
 
   function setBg(tempNum) {
