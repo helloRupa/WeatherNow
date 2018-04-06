@@ -1,15 +1,14 @@
 (function () {
   function getLocation() {
     if (navigator.geolocation) {
-      var geo = navigator.geolocation.watchPosition(function (position) {
+      let geo = navigator.geolocation.watchPosition(function (position) {
         getData(posToURL(position), populateData, showError, {
           code: "SCRIPT_FAILURE"
-        });
-        clearLoadScreen();
+        }, validateData, position);
         navigator.geolocation.clearWatch(geo);
       }, showError, {
         maximumAge: 60000,
-        timeout: 10000,
+        timeout: 20000,
         enableHighAccuracy: false
       });
     } else {
@@ -38,27 +37,46 @@
     console.log(error);
     switch (error.code) {
       case error.PERMISSION_DENIED:
-        errorP.innerHTML = "Without your location, we cannot provide you with the weather.";
+        errorP.textContent = "Without your location, we cannot provide you with the weather.";
         break;
       case error.TIMEOUT:
-        errorP.innerHTML = "The request to get user location timed out.";
+        errorP.textContent = "The request to get user location timed out.";
         break;
       case error.UNKNOWN_ERROR:
-        errorP.innerHTML = "An unknown error occurred. We are sorry.";
+        errorP.textContent = "An unknown error occurred. We are sorry.";
         break;
       default:
-        errorP.innerHTML = "Location information is unavailable at this time.";
+        errorP.textContent = "Location information is unavailable at this time.";
     }
     errorDiv.style.visibility = "visible";
     clearLoadScreen();
   }
+  //check if API returned a valid response
+  function validateData (position, response) {
+    let geoLat = parseInt(position.coords.latitude, 10);
+    let geoLon = parseInt(position.coords.longitude, 10);
+    let resLat = parseInt(response.coord.lat, 10);
+    let resLon = parseInt(response.coord.lon, 10);
+    console.log(geoLat === resLat && geoLon === resLon);
+    console.log(`${geoLat}  ${resLat}`);
+    console.log(`${geoLon}  ${resLon}`);
+    return geoLat === resLat && geoLon === resLon;
+  }
 
-  function getData(url, callback, errorCallback, errorArgs) {
+  function getData(url, callback, errorCallback, errorArgs, validationCallback, validationArgs) {
     let xmlhttp = new XMLHttpRequest();
     xmlhttp.onreadystatechange = function () {
       if (this.readyState == 4 && this.status == 200) {
         let myObj = JSON.parse(this.responseText);
-        if (typeof callback === "function") callback(myObj);
+        let isValid = true;
+        if (typeof validationCallback === "function") 
+          isValid = validationCallback(validationArgs, myObj);
+        if (isValid) {
+          if (typeof callback === "function")
+            callback(myObj);
+        }
+        else
+          setTimeout(() => getData(url, callback, errorCallback, errorArgs, validationCallback, validationArgs), 100);
       }
     };
     xmlhttp.open("GET", url, true);
@@ -76,6 +94,7 @@
       return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();
     });
     let imgSrc = myObj.weather[0].icon;
+    clearLoadScreen();
     setBg(tempNum);
     setTemp(tempNum);
     setLoc(city, country);
