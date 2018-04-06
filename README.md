@@ -8,7 +8,8 @@ Get the current temperature and a basic description of the weather in your local
 - Basic error handling (e.g. if user doesn't allow location sharing, API not working, etc.)
 - Mobile first CSS
 - Colorful load screen
-- Download from GitHub for "newer" JS, from CodePen for old school JS
+- Retries request if API sends back incorrect data
+- Download from GitHub for "newer" and newest JS, from CodePen for old JS (no longer updating CodePen)
 
 *Created as part of Free Code Camp curriculum.*
 
